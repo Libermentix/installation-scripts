@@ -1,0 +1,23 @@
+#!/bin/bash
+#unsetting project related variables
+unset PROJECT_BASE_PATH
+unset PROJECT_NAME
+unset PROJECT_PATH
+export PYTHONPATH=${OLD_PYTHON_PATH}
+unset DB_ENGINE
+unset DB_NAME
+unset DB_PW
+unset DB_USER
+unset DB_HOST
+unset DB_PORT
+#django
+unset DJANGO_SETTINGS_MODULE
+unset DJANGO_SECRET_KEY
+unset DJANGO_DEBUG
+unset DJANGO_MEDIA_URL
+unset DJANGO_STATIC_URL
+unset DJANGO_WEBSITE_URL
+#celery
+unset AMQP_MESSAGE_BROKER
+#mandrill
+unset MANDRILL_API_KEY 

@@ -1,0 +1,44 @@
+#!/bin/bash
+source /etc/profile
+
+PROJECT_NAME=$1
+VENV_DIR=${WORKON_HOME}${PROJECT_NAME}/
+PROJECT_DIR=${WORKON_HOME}../apps/${PROJECT_NAME}/
+DJANGO_DIR=${PROJECT_DIR}
+SOCKFILE=${VENV_DIR}run/gunicorn.sock
+ERROR_LOG=${VENV_DIR}logs/gunicorn_run_error.log
+ACCESS_LOG=${VENV_DIR}logs/gunicorn_access.log
+
+USER=sites
+GROUP=sites
+NUM_WORKERS=3
+
+echo "Project-Name ..........  ${PROJECT_NAME} "
+echo "Projectdir: ...........  ${PROJECT_DIR} "
+echo "Django dir: ...........  ${DJANGODIR}"
+echo "Virtual env directory:.  ${VENV_DIR}"
+echo "gunicorn socket: ......  ${SOCKFILE} "
+echo "error logger: .........  ${ERROR_LOG}"
+echo "access logger: ........  ${ACCESS_LOG}"
+
+echo "Starting project ${PROJECT_NAME}"
+
+# Activate the virtual environment
+echo "starting virtual environment ..."
+workon ${PROJECT_NAME}
+
+RUNDIR=$(dirname $SOCKFILE)
+LOGDIR=$(dirname $ERROR_LOG)
+
+test -d $RUNDIR || mkdir -p $RUNDIR
+test -d $LOGDIR || mkdir -p $LOGDIR
+
+# Start your Django Unicorn
+# Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
+exec ${VENV_DIR}/bin/gunicorn run.wsgi:application \
+  --name $PROJECT_NAME \
+  --workers $NUM_WORKERS \
+  --user=$USER --group=$GROUP \
+  --log-level=debug \
+  --bind=unix:$SOCKFILE \
+  --error-logfile=$ERROR_LOG

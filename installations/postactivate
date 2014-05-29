@@ -1,0 +1,31 @@
+#!/bin/bash
+#setting project related variables
+export PROJECT_NAME='$APPNAME'
+export PROJECT_PATH='/home/sites/apps/$APPNAME/'
+echo "virtual environment for application in projectpath: ${PROJECT_PATH}"
+#extend pythonpath
+EXTENSION=""
+if [ -n "$PYTHONPATH" ] ; then
+    OLD_PYTHON_PATH="$PYTHONPATH"
+    export OLD_PYTHON_PATH
+    EXTENSION=":${OLD_PYTHON_PATH}"
+fi
+export PYTHONPATH=${PROJECT_PATH}${EXTENSION}
+# Database settings
+export DB_ENGINE='django.db.backends.postgresql_psycopg2'
+export DB_NAME=''
+export DB_PW=''
+export DB_USER=''
+export DB_HOST='' #localhost
+export DB_PORT='' # ''
+#django
+export DJANGO_SETTINGS_MODULE='settings.base'
+export DJANGO_SECRET_KEY=''
+export DJANGO_DEBUG='True'
+export DJANGO_MEDIA_URL='http://uploads.$DOMAIN.$TLD/'
+export DJANGO_STATIC_URL='http://static.$DOMAIN.$TLD/'
+export DJANGO_WEBSITE_URL='http://$DOMAIN.$TLD'
+#celery
+export AMQP_MESSAGE_BROKER_URL='amqp://$APPNAME:$PASSWD@localhost:5672/$APPNAME'
+#mandrill
+export MANDRILL_API_KEY='$MANDRILL_KEY'

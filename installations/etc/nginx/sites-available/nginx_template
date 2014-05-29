@@ -1,0 +1,107 @@
+server {
+   listen 80;
+   server_name uploads.$DOMAIN.$TLD;
+
+   access_log /home/sites/virtualenvs/$APPNAME/logs/nginx-media-cdn-access.log;
+   error_log /home/sites/virtualenvs/$APPNAME/logs/nginx-media-cdn-error.log;
+
+   location / {
+      root /home/sites/apps/$APPNAME/assets/uploads/;
+   }
+}
+
+server {
+   listen 80;
+   server_name static.$DOMAIN.$TLD;
+
+   access_log /home/sites/virtualenvs/$APPNAME/logs/nginx-static-cdn-access.log;
+   error_log /home/sites/virtualenvs/$APPNAME/logs/nginx-static-cdn-error.log;
+
+   location / {
+      root /home/sites/apps/$APPNAME/assets/static/;
+      
+      ## hack to overcome cross site protection in ff and ie.
+      if ($request_filename ~* "^.*?\.(eot)|(ttf)|(woff)$"){
+          add_header Access-Control-Allow-Origin *;
+      }
+   }
+   
+}
+
+
+
+upstream $APPNAME_server {
+  # fail_timeout=0 means we always retry an upstream even if it failed
+  # to return a good HTTP response (in case the Unicorn master nukes a
+  # single worker for timing out).
+  server unix:/home/sites/virtualenvs/$APPNAME/run/gunicorn.sock fail_timeout=0;
+}
+
+server {
+    listen 80;
+    server_name www.$APPNAME.$TLD;
+    return 301 $scheme://$APPNAME.$TLD$request_uri;
+}
+
+server {
+
+    listen  80;
+    server_name $APPNAME.$TLD;
+
+    client_max_body_size 4G;
+
+    access_log /home/sites/virtualenvs/$APPNAME/logs/nginx-access.log;
+    error_log  /home/sites/virtualenvsi/$APPNAME/logs/nginx-error.log;
+
+    #location /static/ {
+    #    alias   /home/sites/apps//websportspal/static/;
+    #}
+
+    #location /media/ {
+    #    alias   /home/sites/apps/sportspal/websportspal/media/;
+    #}
+    
+    #see http://blog.opbeat.com/posts/the-new-django-allowed_hosts-with-elb-uwsgi-and-nginx/
+    #if ($host ~ "\d+\.\d+\.\d+\.\d+") {
+    #    set $my_host "gogolf.nu";
+    #}
+    location / {
+        # an HTTP header important enough to have its own Wikipedia entry:
+        #   http://en.wikipedia.org/wiki/X-Forwarded-For
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        # enable this if and only if you use HTTPS, this helps Rack
+        # set the proper protocol for doing redirects:
+        # proxy_set_header X-Forwarded-Proto https;
+
+        # pass the Host: header from the client right along so redirects
+        # can be set properly within the Rack application
+        # proxy_set_header Host $http_host;
+        proxy_set_header Host $http_host;
+
+        # we don't want nginx trying to do something clever with
+        # redirects, we set the Host: header above already.
+        proxy_redirect off;
+
+        # set "proxy_buffering off" *only* for Rainbows! when doing
+        # Comet/long-poll stuff.  It's also safe to set if you're
+        # using only serving fast clients with Unicorn + nginx.
+        # Otherwise you _want_ nginx to buffer responses to slow
+        # clients, really.
+        # proxy_buffering off;
+
+        # Try to serve static files from nginx, no point in making an
+        # *application* server like Unicorn/Rainbows! serve static files.
+        if (!-f $request_filename) {
+            proxy_pass http://$APPNAME_server;
+            break;
+        }
+    }
+
+    # Error pages
+    error_page 500 502 503 504 /500.html;
+    location = /500.html {
+        root /home/sites/apps/$APPNAME/templates/;
+    }
+}
+

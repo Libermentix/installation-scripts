@@ -1,0 +1,34 @@
+#!/bin/bash
+source /etc/profile
+
+PROJECT_NAME=$1
+VENV_DIR=${WORKON_HOME}${PROJECT_NAME}/
+PROJECT_DIR=${WORKON_HOME}../apps/${PROJECT_NAME}/
+DJANGO_DIR=${PROJECT_DIR}
+LOGFILE=${VENV_DIR}logs/celery_server.log
+
+RUNFILE='run'
+
+USER=sites
+GROUP=sites
+NUM_WORKERS=3
+
+echo "Project-Name ..........  ${PROJECT_NAME} "
+echo "Projectdir: ...........  ${PROJECT_DIR} "
+echo "Django dir: ...........  ${DJANGODIR}"
+echo "Virtual env directory:.  ${VENV_DIR}"
+echo "logfile: ..............  ${LOGFILE}"
+
+echo "Starting project ${PROJECT_NAME}"
+
+# Activate the virtual environment
+echo "starting virtual environment ..."
+workon ${PROJECT_NAME}
+
+echo "starting the worker ..."
+exec ${WORKON_HOME}${PROJECT_NAME}/bin/celery beat \
+	-A ${RUNFILE} \
+	--schedule ${WORKON_HOME}${PROJECT_NAME}/lib/celery/beat.db \
+	--loglevel=INFO \
+	--logfile=${LOGFILE} \
+	--pidfile=${WORKON_HOME}${PROJECT_NAME}/run/celery/%n_beat.pid

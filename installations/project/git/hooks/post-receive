@@ -1,0 +1,6 @@
+#!/bin/bash
+# taken from the nice tutorial of http://www.stefan-seelmann.de/wiki/python-deployment
+echo "Deploying app..."
+sudo -u sites /home/sites/bin/deploy-python-app.sh madeineuregio
+sudo -u root /home/sites/bin/restart-python-app.sh madeineuregio
+echo "..done"
